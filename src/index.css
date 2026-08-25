@@ -115,7 +115,7 @@ body {
 }
 
 .scan-line {
-  animation: scanLine 2.5s ease-in-out infinite;
+  animation: scanLine 10s ease-in-out infinite;
 }
 
 .scan-grid {

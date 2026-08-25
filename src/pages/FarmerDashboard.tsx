@@ -49,11 +49,12 @@ export function FarmerDashboard() {
 
   // Continuous scan animation — cycles through steps endlessly
   useEffect(() => {
+    // 8 steps × 1250ms = 10s per full scan cycle, looping continuously
     const interval = setInterval(() => {
       stepRef.current = (stepRef.current + 1) % SCAN_STATUS_STEPS.length;
       setScanStep(stepRef.current);
       setScanProgress(Math.round(((stepRef.current + 1) / SCAN_STATUS_STEPS.length) * 100));
-    }, 1800);
+    }, 1250);
     return () => clearInterval(interval);
   }, []);
 
