@@ -10,6 +10,11 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  server: {
+    host: true,
+    allowedHosts: true,
+    port: 5173,
+  },
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
