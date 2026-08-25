@@ -82,6 +82,79 @@ body {
   100% { background-position: -200% 0; }
 }
 
+@keyframes scanLine {
+  0% { top: 0%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+@keyframes scanPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+@keyframes radarSweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes statusBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes countUp {
+  0% { transform: translateY(8px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes gridFlow {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 20px; }
+}
+
+.scan-line {
+  animation: scanLine 2.5s ease-in-out infinite;
+}
+
+.scan-grid {
+  background-image:
+    linear-gradient(rgba(34,197,94,0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34,197,94,0.12) 1px, transparent 1px);
+  background-size: 20px 20px;
+  animation: gridFlow 1.5s linear infinite;
+}
+
+.scan-corners::before,
+.scan-corners::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: rgba(34,197,94,0.7);
+  border-style: solid;
+}
+.scan-corners::before {
+  top: 8px; left: 8px;
+  border-width: 2px 0 0 2px;
+  border-radius: 4px 0 0 0;
+}
+.scan-corners::after {
+  bottom: 8px; right: 8px;
+  border-width: 0 2px 2px 0;
+  border-radius: 0 0 4px 0;
+}
+
+.status-blink {
+  animation: statusBlink 1.5s ease-in-out infinite;
+}
+
+.radar-sweep {
+  animation: radarSweep 3s linear infinite;
+  transform-origin: center;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
