@@ -1,12 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { Card, Button, PageContainer } from '@/components/Layout';
-import { MessageCircle, Send, Sparkles, Leaf, AlertCircle } from 'lucide-react';
+import { MessageCircle, Send, Sparkles, Leaf, AlertCircle, ImageIcon, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Disease } from '@/types';
+import { isImageRequest, extractImagePrompt, generateImageUrl } from '@/lib/imageGen';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
+  imageUrl?: string;
+  isImage?: boolean;
+  loadingImage?: boolean;
 }
 
 const SUGGESTED_QUESTIONS = [
@@ -15,6 +19,7 @@ const SUGGESTED_QUESTIONS = [
   'When should I plant beans?',
   'What causes banana leaves to turn brown?',
   'My coffee leaves have spots. What should I do?',
+  'Generate an image of a healthy maize field',
 ];
 
 export function AskAgriDoctorPage() {
@@ -30,7 +35,7 @@ export function AskAgriDoctorPage() {
     });
     setMessages([{
       role: 'assistant',
-      content: 'Hello! I\'m AgriDoctor, your AI farming assistant. Ask me anything about your crops — diseases, planting, prevention, or general farming questions. I\'ll answer in simple, farmer-friendly language.',
+      content: 'Hello! I\'m AgriDoctor, your AI farming assistant. Ask me anything about your crops — diseases, planting, prevention, or general farming questions. I can also generate images of agricultural scenes if you ask. I\'ll answer in simple, farmer-friendly language.',
     }]);
   }, []);
 
@@ -88,6 +93,37 @@ export function AskAgriDoctorPage() {
     setMessages(prev => [...prev, { role: 'user', content: question }]);
     setLoading(true);
 
+    if (isImageRequest(question)) {
+      const prompt = extractImagePrompt(question);
+      const imageUrl = generateImageUrl(prompt);
+
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `Here's a generated image for: "${question.replace(/^(please\s+)?(can\s+you\s+)?/i, '')}". I can only generate agriculture-related images. Let me know if you'd like a different scene!`,
+        imageUrl,
+        isImage: true,
+        loadingImage: true,
+      }]);
+
+      const img = new Image();
+      img.onload = () => {
+        setMessages(prev => prev.map((m, i) =>
+          i === prev.length - 1 ? { ...m, loadingImage: false } : m
+        ));
+        setLoading(false);
+      };
+      img.onerror = () => {
+        setMessages(prev => prev.map((m, i) =>
+          i === prev.length - 1
+            ? { ...m, loadingImage: false, imageUrl: undefined, content: 'Sorry, I couldn\'t generate that image right now. Please try again with a different description.' }
+            : m
+        ));
+        setLoading(false);
+      };
+      img.src = imageUrl;
+      return;
+    }
+
     await new Promise(r => setTimeout(r, 1200));
 
     const response = generateResponse(question);
@@ -102,7 +138,7 @@ export function AskAgriDoctorPage() {
           <Sparkles className="w-6 h-6 text-primary-500" />
           Ask AgriDoctor
         </h1>
-        <p className="text-gray-500 mt-1">Your AI farming assistant — ask in simple language</p>
+        <p className="text-gray-500 mt-1">Your AI farming assistant — ask questions or request agriculture images</p>
       </div>
 
       <Card className="flex flex-col h-[calc(100vh-220px)] min-h-[400px] overflow-hidden">
@@ -112,7 +148,7 @@ export function AskAgriDoctorPage() {
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               {msg.role === 'assistant' && (
                 <div className="w-8 h-8 rounded-lg bg-primary-100 text-primary-600 flex items-center justify-center mr-2 flex-shrink-0">
-                  <Leaf className="w-4 h-4" />
+                  {msg.isImage ? <ImageIcon className="w-4 h-4" /> : <Leaf className="w-4 h-4" />}
                 </div>
               )}
               <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap ${
@@ -121,10 +157,26 @@ export function AskAgriDoctorPage() {
                   : 'bg-primary-50 text-gray-700 rounded-bl-md'
               }`}>
                 {msg.content}
+                {msg.imageUrl && (
+                  <div className="mt-3">
+                    {msg.loadingImage ? (
+                      <div className="flex items-center gap-2 text-primary-600 bg-white rounded-xl p-4">
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span className="text-xs">Generating image…</span>
+                      </div>
+                    ) : (
+                      <img
+                        src={msg.imageUrl}
+                        alt="Generated agricultural image"
+                        className="rounded-xl w-full max-w-sm border border-primary-100"
+                      />
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           ))}
-          {loading && (
+          {loading && !messages.some(m => m.loadingImage) && (
             <div className="flex justify-start">
               <div className="w-8 h-8 rounded-lg bg-primary-100 text-primary-600 flex items-center justify-center mr-2 flex-shrink-0">
                 <Leaf className="w-4 h-4" />
@@ -149,8 +201,13 @@ export function AskAgriDoctorPage() {
                 <button
                   key={i}
                   onClick={() => handleSend(q)}
-                  className="text-xs bg-primary-50 text-primary-700 px-3 py-1.5 rounded-full hover:bg-primary-100 transition-colors border border-primary-100"
+                  className={`text-xs px-3 py-1.5 rounded-full hover:opacity-80 transition-opacity border ${
+                    q.toLowerCase().includes('generate')
+                      ? 'bg-primary-100 text-primary-700 border-primary-200'
+                      : 'bg-primary-50 text-primary-700 border-primary-100'
+                  }`}
                 >
+                  {q.toLowerCase().includes('generate') && <ImageIcon className="w-3 h-3 inline mr-1" />}
                   {q}
                 </button>
               ))}
@@ -165,7 +222,7 @@ export function AskAgriDoctorPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Ask about your crops…"
+            placeholder="Ask about your crops or request an image…"
             className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none text-sm"
           />
           <Button onClick={() => handleSend()} disabled={loading || !input.trim()} className="!px-3">
@@ -177,7 +234,7 @@ export function AskAgriDoctorPage() {
       <div className="mt-3 flex items-start gap-2 bg-amber-50 rounded-xl p-3">
         <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
         <p className="text-xs text-amber-700">
-          AI answers are general guidance, not a professional diagnosis. For serious problems, consult an agricultural extension officer.
+          AI answers and generated images are for guidance only, not a professional diagnosis. For serious crop problems, consult an agricultural extension officer. Image generation is limited to agriculture-related topics.
         </p>
       </div>
     </PageContainer>
