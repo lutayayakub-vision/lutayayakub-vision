@@ -20,6 +20,7 @@ import { AdminDashboard } from '@/pages/AdminDashboard';
 import { AdminCropsPage } from '@/pages/AdminCropsPage';
 import { AdminDiseasesPage } from '@/pages/AdminDiseasesPage';
 import { AdminUsersPage } from '@/pages/AdminUsersPage';
+import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
 
 function Routes() {
   const { path } = useRouter();
@@ -46,6 +47,9 @@ function Routes() {
   }
   if (path === '/register') {
     return session ? <NavigateToDashboard profile={profile} /> : <RegisterPage />;
+  }
+  if (path === '/reset-password') {
+    return <ResetPasswordPage />;
   }
 
   // Protected routes — require auth

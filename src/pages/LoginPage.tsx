@@ -2,17 +2,22 @@ import { useState } from 'react';
 import { useNavigate } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/Layout';
-import { Leaf, Mail, Lock, AlertCircle, ArrowLeft, UserCircle, Sprout, Stethoscope, ShieldCheck } from 'lucide-react';
+import { Leaf, Mail, AlertCircle, ArrowLeft, UserCircle, Sprout, Stethoscope, ShieldCheck, MailCheck } from 'lucide-react';
+import { PasswordInput } from '@/components/PasswordInput';
 import { DEMO_ACCOUNTS } from '@/lib/demo';
 import type { UserRole } from '@/types';
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const { signIn, requestPasswordReset } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -24,6 +29,19 @@ export function LoginPage() {
       setError(error);
     } else {
       navigate('/dashboard');
+    }
+  }
+
+  async function handleResetRequest(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setResetLoading(true);
+    const { error } = await requestPasswordReset(resetEmail);
+    setResetLoading(false);
+    if (error) {
+      setError(error);
+    } else {
+      setResetSent(true);
     }
   }
 
@@ -83,24 +101,56 @@ export function LoginPage() {
                 />
               </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
-              <div className="relative">
-                <Lock className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
-                  placeholder="••••••••"
-                />
-              </div>
+            <PasswordInput
+              value={password}
+              onChange={setPassword}
+              required
+              autoComplete="current-password"
+            />
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => { setForgotOpen((v) => !v); setResetSent(false); setError(null); }}
+                className="text-sm text-primary-600 font-medium hover:text-primary-700"
+              >
+                {forgotOpen ? 'Back to sign in' : 'Forgot password?'}
+              </button>
             </div>
             <Button type="submit" size="lg" disabled={loading} className="w-full">
               {loading ? 'Signing in…' : 'Sign In'}
             </Button>
           </form>
+
+          {forgotOpen && (
+            <div className="mt-4 p-4 rounded-xl bg-primary-50/60 border border-primary-100 animate-scale-in">
+              {resetSent ? (
+                <div className="flex items-start gap-2">
+                  <MailCheck className="w-5 h-5 text-primary-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-primary-800">
+                    If an account exists for <span className="font-semibold">{resetEmail}</span>, a password reset link has been sent. Check your inbox and follow the link to set a new password.
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={handleResetRequest} className="space-y-3">
+                  <p className="text-sm text-gray-600">Enter your email and we'll send you a link to reset your password.</p>
+                  <div className="relative">
+                    <Mail className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="email"
+                      required
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
+                      placeholder="you@example.com"
+                    />
+                  </div>
+                  <Button type="submit" size="md" disabled={resetLoading} className="w-full">
+                    {resetLoading ? 'Sending…' : 'Send Reset Link'}
+                  </Button>
+                </form>
+              )}
+            </div>
+          )}
 
           <div className="mt-6 pt-6 border-t border-gray-100">
             <p className="text-center text-sm text-gray-500 mb-3">Try a demo account:</p>

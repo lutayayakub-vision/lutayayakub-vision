@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/Layout';
-import { Leaf, Mail, Lock, AlertCircle, ArrowLeft, UserCircle, Sprout, Stethoscope, ShieldCheck, Phone, MapPin } from 'lucide-react';
+import { Leaf, Mail, AlertCircle, ArrowLeft, UserCircle, Sprout, Stethoscope, ShieldCheck, Phone, MapPin } from 'lucide-react';
+import { PasswordInput } from '@/components/PasswordInput';
 import type { UserRole } from '@/types';
 
 export function RegisterPage() {
@@ -115,21 +116,14 @@ export function RegisterPage() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
-              <div className="relative">
-                <Lock className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="password"
-                  required
-                  minLength={6}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
-                  placeholder="At least 6 characters"
-                />
-              </div>
-            </div>
+            <PasswordInput
+              value={password}
+              onChange={setPassword}
+              required
+              minLength={6}
+              placeholder="At least 6 characters"
+              autoComplete="new-password"
+            />
 
             <div className="grid grid-cols-2 gap-3">
               <div>
