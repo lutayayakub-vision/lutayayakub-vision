@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { localAuth, type MinimalSession } from '@/lib/localAuth';
 import type { Profile, UserRole } from '@/types';
 
 interface AuthContextValue {
@@ -23,26 +24,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) {
-        loadProfile(session.user.id);
-      } else {
-        setLoading(false);
-      }
-    });
+    if (isSupabaseConfigured) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setSession(session);
+        if (session) {
+          loadProfile(session.user.id);
+        } else {
+          setLoading(false);
+        }
+      });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) {
-        loadProfile(session.user.id);
-      } else {
-        setProfile(null);
-        setLoading(false);
-      }
-    });
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        setSession(session);
+        if (session) {
+          loadProfile(session.user.id);
+        } else {
+          setProfile(null);
+          setLoading(false);
+        }
+      });
 
-    return () => subscription.unsubscribe();
+      return () => subscription.unsubscribe();
+    } else {
+      // Local fallback mode — no Supabase backend configured.
+      localAuth.seedDemoAccounts();
+      const { session, profile } = localAuth.getSession();
+      setSession(session as unknown as Session);
+      setProfile(profile);
+      setLoading(false);
+    }
   }, []);
 
   async function loadProfile(userId: string) {
@@ -60,50 +70,81 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signIn(email: string, password: string) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error?.message ?? null };
+    if (isSupabaseConfigured) {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      return { error: error?.message ?? null };
+    }
+    const { error, profile, session } = await localAuth.signIn(email, password);
+    if (!error) {
+      setSession(session as unknown as Session);
+      setProfile(profile);
+    }
+    return { error };
   }
 
   async function signUp(email: string, password: string, name: string, role: UserRole, phone?: string, location?: string) {
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) return { error: error.message };
+    if (isSupabaseConfigured) {
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      if (error) return { error: error.message };
 
-    if (data.user) {
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: data.user.id,
-        name,
-        email,
-        phone: phone ?? null,
-        role,
-        location: location ?? null,
-      });
-      if (profileError) return { error: profileError.message };
+      if (data.user) {
+        const { error: profileError } = await supabase.from('profiles').insert({
+          id: data.user.id,
+          name,
+          email,
+          phone: phone ?? null,
+          role,
+          location: location ?? null,
+        });
+        if (profileError) return { error: profileError.message };
+      }
+
+      return { error: null };
     }
-
-    return { error: null };
+    const { error, profile, session } = await localAuth.signUp(email, password, name, role, phone, location);
+    if (!error) {
+      setSession(session as unknown as Session);
+      setProfile(profile);
+    }
+    return { error };
   }
 
   async function signOut() {
-    await supabase.auth.signOut();
+    if (isSupabaseConfigured) {
+      await supabase.auth.signOut();
+    } else {
+      localAuth.signOut();
+    }
     setProfile(null);
     setSession(null);
   }
 
   async function refreshProfile() {
-    if (session?.user.id) {
-      await loadProfile(session.user.id);
+    if (isSupabaseConfigured) {
+      if (session?.user.id) {
+        await loadProfile(session.user.id);
+      }
+    } else {
+      const { profile } = localAuth.getSession();
+      setProfile(profile);
     }
   }
 
   async function requestPasswordReset(email: string) {
-    const redirectTo = `${window.location.origin}/#/reset-password`;
-    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
-    return { error: error?.message ?? null };
+    if (isSupabaseConfigured) {
+      const redirectTo = `${window.location.origin}/#/reset-password`;
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+      return { error: error?.message ?? null };
+    }
+    return localAuth.requestPasswordReset(email);
   }
 
   async function updatePassword(password: string) {
-    const { error } = await supabase.auth.updateUser({ password });
-    return { error: error?.message ?? null };
+    if (isSupabaseConfigured) {
+      const { error } = await supabase.auth.updateUser({ password });
+      return { error: error?.message ?? null };
+    }
+    return localAuth.updatePassword(password);
   }
 
   return (

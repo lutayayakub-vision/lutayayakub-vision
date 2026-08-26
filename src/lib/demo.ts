@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export const DEMO_ACCOUNTS = {
   farmer: { email: 'sarah@agridoctor.demo', password: 'demo1234', name: 'Sarah', role: 'farmer' as const, location: 'Wakiso' },
@@ -11,6 +11,9 @@ let initialized = false;
 export async function ensureDemoAccounts() {
   if (initialized) return;
   initialized = true;
+
+  // In local (no-Supabase) mode, demo accounts are seeded by the local auth provider.
+  if (!isSupabaseConfigured) return;
 
   const savedSession = (await supabase.auth.getSession()).data.session;
 
