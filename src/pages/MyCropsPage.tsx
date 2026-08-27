@@ -30,7 +30,10 @@ export function MyCropsPage() {
   }, [profile]);
 
   async function loadFarmerCrops() {
-    if (!profile?.id) return;
+    if (!profile?.id) {
+      setLoading(false);
+      return;
+    }
     const { data } = await supabase
       .from('farmer_crops')
       .select('*')

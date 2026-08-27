@@ -13,7 +13,10 @@ export function HistoryPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!profile?.id) return;
+    if (!profile?.id) {
+      setLoading(false);
+      return;
+    }
     supabase
       .from('diagnoses')
       .select('*')
