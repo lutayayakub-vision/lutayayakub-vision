@@ -55,9 +55,9 @@ export function LandingPage() {
                 Take a photo, understand the problem, and get practical next steps for your crop — in seconds.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start animate-slide-up">
-                <Button size="lg" onClick={() => navigate('/register')} className="group">
+                <Button size="lg" onClick={() => navigate('/register')} className="group animate-cta-pulse ring-4 ring-primary-300/50 scale-105 text-lg px-8 py-4">
                   <span className="flex items-center gap-2">
-                    <Camera className="w-5 h-5" />
+                    <Camera className="w-6 h-6" />
                     Diagnose My Crop
                   </span>
                 </Button>
@@ -68,6 +68,9 @@ export function LandingPage() {
                   </span>
                 </Button>
               </div>
+              <p className="mt-4 text-sm text-primary-600 font-medium text-center lg:text-left animate-slide-up">
+                Free to start • Take a photo and get results in seconds
+              </p>
               <div className="mt-8 flex items-center justify-center lg:justify-start gap-6 text-sm text-gray-500">
                 <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-primary-500" /> Fast results</span>
                 <span className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-primary-500" /> Farmer-friendly</span>

@@ -50,6 +50,9 @@ body {
   .animate-pulse-soft {
     animation: pulseSoft 2s ease-in-out infinite;
   }
+  .animate-cta-pulse {
+    animation: ctaPulse 2s ease-in-out infinite;
+  }
   .animate-shimmer {
     background: linear-gradient(90deg, #f0fdf4 25%, #dcfce7 50%, #f0fdf4 75%);
     background-size: 200% 100%;
@@ -102,6 +105,11 @@ body {
 @keyframes statusBlink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
+}
+
+@keyframes ctaPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.5), 0 10px 25px -5px rgba(22, 163, 74, 0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(22, 163, 74, 0), 0 10px 25px -5px rgba(22, 163, 74, 0.4); }
 }
 
 @keyframes countUp {
