@@ -20,6 +20,7 @@ import { AdminDashboard } from '@/pages/AdminDashboard';
 import { AdminCropsPage } from '@/pages/AdminCropsPage';
 import { AdminDiseasesPage } from '@/pages/AdminDiseasesPage';
 import { AdminUsersPage } from '@/pages/AdminUsersPage';
+import type { Profile } from '@/types';
 
 function Routes() {
   const { path } = useRouter();
@@ -115,12 +116,13 @@ function Routes() {
   return <NavigateToDashboard profile={profile} />;
 }
 
-function NavigateToDashboard({ profile }: { profile: any }) {
+function NavigateToDashboard({ profile }: { profile: Profile | null }) {
   const { navigate } = useRouter();
   useEffect(() => {
     const role = profile?.role ?? 'farmer';
     navigate(role === 'admin' ? '/admin-dashboard' : role === 'expert' ? '/expert-dashboard' : '/dashboard');
-  }, [profile]);
+  }, [profile, navigate]); // ✅ FIXED: Added 'navigate' to dependency array
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-primary-50">
       <div className="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
