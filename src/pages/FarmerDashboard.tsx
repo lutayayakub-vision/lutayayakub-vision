@@ -33,20 +33,18 @@ export function FarmerDashboard() {
   const stepRef = useRef(0);
 
   useEffect(() => {
-    if (!profile?.id) {
-      setLoading(false);
-      return;
+    if (profile?.id) {
+      supabase
+        .from('diagnoses')
+        .select('*')
+        .eq('farmer_id', profile.id)
+        .order('created_at', { ascending: false })
+        .limit(5)
+        .then(({ data }) => {
+          setDiagnoses(data ?? []);
+          setLoading(false);
+        });
     }
-    supabase
-      .from('diagnoses')
-      .select('*')
-      .eq('farmer_id', profile.id)
-      .order('created_at', { ascending: false })
-      .limit(5)
-      .then(({ data }) => {
-        setDiagnoses(data ?? []);
-        setLoading(false);
-      });
   }, [profile]);
 
   // Continuous scan animation — cycles through steps endlessly

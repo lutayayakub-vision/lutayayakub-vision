@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
 import { Card, Button, PageContainer, LoadingSpinner, Badge } from '@/components/Layout';
-import { Stethoscope, ArrowLeft, Send, CircleCheck as CheckCircle, MapPin, Sprout, CircleAlert as AlertCircle } from 'lucide-react';
+import { Stethoscope, ArrowLeft, Send, CheckCircle, MapPin, Sprout, AlertCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Diagnosis } from '@/types';
 
@@ -23,10 +23,7 @@ export function ExpertHelpPage() {
   const preselectedDiagnosis = params.get('diagnosis');
 
   useEffect(() => {
-    if (!profile?.id) {
-      setLoading(false);
-      return;
-    }
+    if (!profile?.id) return;
     supabase
       .from('diagnoses')
       .select('*')

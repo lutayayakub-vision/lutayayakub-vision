@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
 import { Card, Button, PageContainer, LoadingSpinner, Badge } from '@/components/Layout';
-import { ArrowLeft, Sprout, CircleAlert as AlertCircle, Lightbulb, ShieldCheck, Stethoscope, Share2, CircleCheck as CheckCircle, Clock, Microscope, FlaskConical } from 'lucide-react';
+import { ArrowLeft, Sprout, AlertCircle, Lightbulb, ShieldCheck, Stethoscope, Share2, CheckCircle, Clock, Microscope, FlaskConical } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Diagnosis, ExpertRequest, DiseaseProduct } from '@/types';
 
@@ -18,10 +18,7 @@ export function DiagnosisDetailPage() {
   const diagnosisId = router.path.split('/').pop();
 
   useEffect(() => {
-    if (!diagnosisId) {
-      setLoading(false);
-      return;
-    }
+    if (!diagnosisId) return;
     supabase
       .from('diagnoses')
       .select('*')
